@@ -1,0 +1,220 @@
+For this project, we will be creating a continuous delivery pipeline for a web application. We will first use a version control system to store the source code. Then, we will learn how to create a CI/CD pipeline that will be used to automatically deploy the web application whenever the source code is updated
+
+### Accomplishment
+
+- Set up a GitHub repository for the application code
+- Create an AWS Elastic Beanstalk environment to deploy the application
+- Configure AWS CodeBuild to build the source from GitHub
+- Use AWS CodePipeline to set up the continuous delivery pipeline with source, build, and deploy stages
+
+---
+
+## Set up a GitHub Repository
+
+**Before we start I will assume that you have an existing GitHub account**
+
+1. Log into your GitHub account
+2. In the same tab, open the aws-elastic-beanstalk-express-js-sample repo
+3. Click on the Fork button, then you will see a small window asking you where you want to fork the repo
+4. Verify that it is showing your account and choose **Create a fork**. After a few seconds, your browser will show you a copy of the repo in your account
+5. Go to the repo and click on the green **Code** button
+6. Clone the repo using the HTTPS option and click on the clipboard to copy the text
+7. In your Git Bash terminal type in **git clone** then paste from your clipboard then hit enter
+8. Navigate to where you have cloned the repo too and open up **app.js** in your text editor.
+9. Change the message in line 5 to something else other than “Hello World!” then save the file
+10. Back in the terminal commit that change with the following commands
+
+```jsx
+git add app.js
+git commit -m "change message"
+```
+
+1. Push the local changes to the remote repo hosted on GitHub with the following command
+
+```jsx
+git push
+```
+
+### Application Architecture
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/f4274f03-3f35-43f1-92cc-caa523f78cf6/Untitled.png)
+
+---
+
+## Deploy the Web App
+
+1. Log into AWS and navigate to AWS Elastic Beanstalk
+2. Click **Create Application**
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/506e284c-9cda-4b49-b01f-ee275bab61ee/Untitled.png)
+
+1. Choose **Web server environment** in the environment tier section
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/2d696341-357f-4342-932e-d3813cc0212e/Untitled.png)
+
+1. Now we need to give our web app a name. For this example, I’ve gone with **CICDPipeline** but you can call it whatever you want
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/2694b82b-2ae6-4995-b3ea-a55dfc57f2bb/Untitled.png)
+
+1. We are going to ignore the Environment information and move onto the Platform section
+2. In this example we will be selecting Node.JS as our platform, and the rest of the information will automatically be filled
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/16232b7d-81c8-4a97-a7ca-b69b37614e9f/Untitled.png)
+
+1. Make sure that the radio button next to Sample Application is selected in the Application code section
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/f32a95d6-bd18-442d-b23e-15769fc25e3a/Untitled.png)
+
+1. We also want to make sure that we are using the free tier resources so make sure that the **Single instance (free tier eligible)** is ticked.
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/777515a4-7592-44a2-9e16-8e6e5c7b2000/Untitled.png)
+
+1. Click Next
+2. On the Configure service access screen, make sure to choose **Use an existing service role** for the Service Role, and select the default role (**CodeDeployDemo-EC2-Instance-Profile**), and do the same for EC2 instance profile
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/3fdf496f-2f8a-4a58-9428-1d40dd1cbfbb/Untitled.png)
+
+1. Then press **Skip to review**
+2. Then hit **Submit**
+3. After that, we just need to wait for our deployment to finish. Once it is finished you should see a green banner with the text saying **Environment successfully launched**
+4. Now we can test our web app by clicking on the link under the name of our environment called **Domain**
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/10b73d84-f81e-4ba3-bd54-eade5a6fe1d7/Untitled.png)
+
+1. You should now see the following page
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/8acf67ef-d87c-4c5d-863b-6d4fb4c9fb3b/Untitled.png)
+
+### Application Architecture
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/6b746dbd-f3cd-4033-9c0b-cbf3fbcc87a0/Untitled.png)
+
+---
+
+## Create Build Project
+
+1. In a new tab, open up the AWS CodeBuild console
+2. Click on **Create build project**
+3. Give it a name. For this example I’ve used **Build-CICDPipeline**
+4. In the source section, select GitHub from the dropdown menu.
+5. Confirm that the Connect using OAuth button is selected, then click on **Connect to GitHub.** A new browser will open asking you to give AWS CodeBuild access to your GitHub repository.
+6. Choose the green **Authorize** button, then confirm the request
+7. Then select **Repository in my GitHub account**
+8. In the GitHub repository search bar, search for the repository that you forked earlier on.
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/9d555c53-4e34-4abd-8eeb-5430b8bcaa27/Untitled.png)
+
+1. Then make sure the following options are as follows
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/c83fd499-64e7-483a-a118-9f9548769181/Untitled.png)
+
+1. In the Buildspec section, click on **Insert build commands**
+2. Choose **Switch to editor**
+3. Replace the Buildspec in the editor with the following code below
+
+```jsx
+version: 0.2
+phases:
+    build:
+        commands:
+            - npm i --save
+artifacts:
+    files:
+        - '**/*'
+```
+
+1. Click on **Create build project**
+2. After you have successfully built your project, you can now click on **Start build**
+3. In the build logs, be sure to check that it references the correct GitHub repository
+4. Wait for the build to complete, then scroll to the top and you should see a green success bar letting you know it has worked
+
+### Application Architecture
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/ea6f5d23-ad7b-48c3-af25-56299d30c467/Untitled.png)
+
+## Create the Delivery Pipeline
+
+1. Open a new tab and navigate to the AWS CodePipeline console.
+2. Click on **Create pipeline**
+3. Give your pipeline a name
+4. Make sure that New service role has been selected
+5. Click **Next**
+6. Select **GitHub version 1** from the Source provider dropdown menu
+7. Click on **Connect to GitHub** where you will have reconnect your GitHub account
+8. In the repository dropdown, select the repo that we created earlier on 
+9. Select **main** from the **branch** dropdown menu
+10. Make sure **GitHub webhooks** is selected
+11. Click **Next**
+12. In the build provider dropdown menu, select **AWS CodeBuild**
+13. Select the relevant region, then choose your project name then click **Next**
+14. Select **AWS Elastic Beanstalk** from the Deploy provider dropdown
+15. Again, select the relevant region
+16. In the application name, choose your project, and choose the corresponding Environment name also.
+17. Then click **Next**
+18. Scroll down to the bottom of the page and click **Create pipeline**
+19. Wait for all the stages to turn green and says *Succeeded*, choose **AWS Elastic Beanstalk** then a new tab with your AWS Elastic Beanstalk environments will open
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/e33d1711-fc19-46cd-b16d-59321a7a5310/Untitled.png)
+
+1. In *Recent environments* on the left-hand side click on your environment
+2. Then click on the link in the Domain area and you should see a white page with the text you changed in your GitHub commit earlier on.
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/03d9e97e-c179-4dc5-bf15-fa24439240b3/Untitled.png)
+
+### Application Architecture
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/9ba445e0-a81c-44e9-8c1e-09891ebe94f2/Untitled.png)
+
+---
+
+## Finalize the Pipeline and Test
+
+1. Go back to the AWS CodePipeline console then click on your pipeline
+2. Click on **Edit**
+3. Select **Add stage** between the Build and Deploy stages
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/152e464c-a4ea-4290-87c3-00a622d2f9be/Untitled.png)
+
+1. In the Stage name field, enter **Review**, then click on **Add stage**
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/13fb110b-61bf-4b33-be6e-099d83d04c67/Untitled.png)
+
+1. You should now see the extra stage called Review, where we will now click on **Add action group**
+2. Under Action Name enter *Manual_Review*
+3. Select **Manual approval** from the Action provider dropdown
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/7f15c6d9-2511-4e4c-99ea-b6f2a667e213/Untitled.png)
+
+1. Leave the other options blank and click **Done**
+2. Scroll up to the top of the page and select **Save**, then **Save** again to confirm the changes
+3. You should now see **four** stages in your pipeline: **Source, Build, Review** and **Deploy**
+4. Back in your code editor, open the app.js file
+5. Change the message in Line 5 and save the file
+6. Open up Git Bash and navigate to the folder created earlier on
+7. Commit the change with the following commands
+
+```jsx
+git add app.js
+git commit -m "Full pipeline test"
+```
+
+1. Push the changes the to remote repo hosted on GitHub with the following command
+
+```jsx
+git push
+```
+
+1. Going back to the AWS CodePipeline console you should see the four stages.
+2. When the review stage changes to blue, click on the **Review** button
+3. Click on the Approved checkbox and add a comment, then click on **Submit**
+4. The review stage should now change from blue to green and we now just need to wait for the final stage to complete.
+5. Once it turns green, click on the **AWS Elastic Beanstalk** link in the Deploy stage again
+6. Click on your environment again under *Recent Environments*
+7. Select your environment name
+8. Then click on the **Domain** link again and you should see a webpage with the updated message from your most recent git commit.
+
+---
+
+### Application Architecture
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/9acbd938-ebc5-48ea-a1f7-843984d773e5/7985a721-7502-417b-b317-b080036807f4/Untitled.png)
